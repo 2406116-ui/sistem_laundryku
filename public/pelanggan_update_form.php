@@ -19,7 +19,7 @@ if (!$pelanggan) {
 
 <head>
     <meta charset="UTF-8">
-    <title>Update Pelanggan</title>
+    <title>Update Pelanggan - LaundryKu</title>
     <style>
         * {
             margin: 0;
@@ -126,6 +126,7 @@ if (!$pelanggan) {
             margin-bottom: 15px;
             border: 1px solid #cbd5e1;
             border-radius: 14px;
+            background: white;
         }
 
         button {

@@ -33,7 +33,6 @@ $data = $conn->query("SELECT * FROM pelanggan ORDER BY id_pelanggan DESC");
     <meta charset="UTF-8">
     <title>Data Pelanggan - LaundryKu</title>
     <style>
-        /* style sama seperti sebelumnya (sidebar biru gelap, putih) */
         * {
             margin: 0;
             padding: 0;
@@ -271,11 +270,11 @@ $data = $conn->query("SELECT * FROM pelanggan ORDER BY id_pelanggan DESC");
                     </thead>
                     <tbody><?php $no = 1;
                             while ($row = $data->fetch_assoc()):
-                                $id_pelanggan_custom = "PL" . str_pad($row['id_pelanggan'], 3, '0', STR_PAD_LEFT);
+                                $id_pelanggan = "PL" . str_pad($row['id_pelanggan'], 3, '0', STR_PAD_LEFT);
                             ?>
                             <tr>
-                                <td style="text-align:center;"><?= $no++; ?></td>
-                                <td><?= $id_pelanggan_custom ?></td>
+                                <td><?= $no++; ?></td>
+                                <td><?= $id_pelanggan ?></td>
                                 <td><?= htmlspecialchars($row['nama_pelanggan']) ?></td>
                                 <td><?= htmlspecialchars($row['alamat']) ?></td>
                                 <td><?= htmlspecialchars($row['no_hp']) ?></td>
@@ -283,7 +282,8 @@ $data = $conn->query("SELECT * FROM pelanggan ORDER BY id_pelanggan DESC");
                                     <a href="pelanggan_update_form.php?id=<?= $row['id_pelanggan'] ?>" class="btn btn-update">Update</a>
                                     <a href="?hapus=<?= $row['id_pelanggan'] ?>" onclick="return confirm('Yakin hapus?')" class="btn btn-danger">Hapus</a>
                                 </td>
-                            </tr><?php endwhile; ?>
+                            </tr>
+                        <?php endwhile; ?>
                     </tbody>
                 </table>
             <?php else: ?><p>Belum ada data.</p><?php endif; ?>
