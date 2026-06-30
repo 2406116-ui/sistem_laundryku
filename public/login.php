@@ -25,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -49,20 +50,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         @keyframes gradientMove {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
         .login-container {
             max-width: 400px;
             width: 100%;
-            background: #f1f5f9; /* abu muda */
+            background: #f1f5f9;
+            /* abu muda */
             border-radius: 28px;
-            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.4);
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.4);
             padding: 40px 32px;
             text-align: center;
-            border: 1px solid rgba(0,0,0,0.05);
+            border: 1px solid rgba(0, 0, 0, 0.05);
         }
 
         .logo {
@@ -79,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             justify-content: center;
             font-size: 34px;
             margin-bottom: 16px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
         }
 
         .logo h1 {
@@ -132,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         .input-group input:focus {
             outline: none;
             border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
             background: white;
         }
 
@@ -174,31 +184,33 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     </style>
 </head>
+
 <body>
-<div class="login-container">
-    <div class="logo">
-        <div class="logo-icon">🧺</div>
-        <h1>LaundryKu</h1>
-        <p>Sistem Informasi Laundry</p>
-    </div>
-    <div class="welcome">
-        <p>Biar ngurus laundry jadi rapi dan nyaman</p>
-    </div>
-    <?php if ($error): ?>
-        <div class="error"><?= htmlspecialchars($error) ?></div>
-    <?php endif; ?>
-    <form method="post">
-        <div class="input-group">
-            <label>Username</label>
-            <input type="text" name="username" placeholder="Masukkan username" required autofocus>
+    <div class="login-container">
+        <div class="logo">
+            <div class="logo-icon">🧺</div>
+            <h1>LaundryKu</h1>
+            <p>Sistem Informasi Laundry</p>
         </div>
-        <div class="input-group">
-            <label>Password</label>
-            <input type="password" name="password" placeholder="Masukkan password" required>
+        <div class="welcome">
+            <p>Biar ngurus laundry jadi rapi dan nyaman</p>
         </div>
-        <button type="submit">Masuk</button>
-    </form>
-    <div class="demo-info">Demo: admin / admin123</div>
-</div>
+        <?php if ($error): ?>
+            <div class="error"><?= htmlspecialchars($error) ?></div>
+        <?php endif; ?>
+        <form method="post">
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" name="username" placeholder="Masukkan username" required autofocus>
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" name="password" placeholder="Masukkan password" required>
+            </div>
+            <button type="submit">Masuk</button>
+        </form>
+        <div class="demo-info">Demo: admin / admin123</div>
+    </div>
 </body>
+
 </html>

@@ -8,34 +8,19 @@ if (!isset($_SESSION['login'])) {
 }
 require_once '../config/database.php';
 
-// Filter bulan
 $bulanList = $conn->query("SELECT DISTINCT DATE_FORMAT(tanggal_masuk, '%Y-%m') as bulan FROM transaksi ORDER BY bulan DESC");
 $selectedBulan = isset($_GET['bulan']) ? $_GET['bulan'] : null;
-
-// Data untuk ringkasan per bulan + per jenis
 $filter = $selectedBulan ? "WHERE DATE_FORMAT(t.tanggal_masuk, '%Y-%m') = '$selectedBulan'" : "";
-$sql = "SELECT 
-            DATE_FORMAT(t.tanggal_masuk, '%Y-%m') as bulan,
-            t.jenis as jenis_nama,
-            COUNT(t.id_transaksi) as jumlah_transaksi,
-            SUM(t.total_harga) as total_pendapatan,
-            SUM(t.berat_kg) as total_berat
-        FROM transaksi t
-        $filter
-        GROUP BY bulan, t.jenis
-        ORDER BY bulan DESC, t.jenis ASC";
-$result = $conn->query($sql);
 
+$sql = "SELECT DATE_FORMAT(t.tanggal_masuk, '%Y-%m') as bulan, t.jenis as jenis_nama,
+        COUNT(t.id_transaksi) as jumlah_transaksi, SUM(t.total_harga) as total_pendapatan, SUM(t.berat_kg) as total_berat
+        FROM transaksi t $filter GROUP BY bulan, t.jenis ORDER BY bulan DESC, t.jenis ASC";
+$result = $conn->query($sql);
 $dataPerBulan = [];
 while ($row = $result->fetch_assoc()) {
     $bulan = $row['bulan'];
     if (!isset($dataPerBulan[$bulan])) {
-        $dataPerBulan[$bulan] = [
-            'total_transaksi' => 0,
-            'total_pendapatan' => 0,
-            'total_berat' => 0,
-            'jenis' => []
-        ];
+        $dataPerBulan[$bulan] = ['total_transaksi' => 0, 'total_pendapatan' => 0, 'total_berat' => 0, 'jenis' => []];
     }
     $dataPerBulan[$bulan]['total_transaksi'] += $row['jumlah_transaksi'];
     $dataPerBulan[$bulan]['total_pendapatan'] += $row['total_pendapatan'];
@@ -48,9 +33,8 @@ while ($row = $result->fetch_assoc()) {
     ];
 }
 
-// Data untuk grafik pendapatan per bulan (semua data, tanpa filter)
-$chartBulan = $conn->query("SELECT DATE_FORMAT(tanggal_masuk, '%Y-%m') as bulan, SUM(total_harga) as pendapatan 
-                            FROM transaksi GROUP BY bulan ORDER BY bulan ASC");
+// Grafik pendapatan per bulan
+$chartBulan = $conn->query("SELECT DATE_FORMAT(tanggal_masuk, '%Y-%m') as bulan, SUM(total_harga) as pendapatan FROM transaksi GROUP BY bulan ORDER BY bulan ASC");
 $bulanLabels = [];
 $bulanValues = [];
 while ($row = $chartBulan->fetch_assoc()) {
@@ -58,7 +42,7 @@ while ($row = $chartBulan->fetch_assoc()) {
     $bulanValues[] = $row['pendapatan'];
 }
 
-// Data untuk grafik pie per jenis laundry (total pendapatan per jenis)
+// Grafik pie per jenis
 $jenisPie = $conn->query("SELECT jenis, SUM(total_harga) as total FROM transaksi GROUP BY jenis");
 $jenisLabels = [];
 $jenisValues = [];
@@ -67,7 +51,7 @@ while ($row = $jenisPie->fetch_assoc()) {
     $jenisValues[] = $row['total'];
 }
 
-// Detail transaksi (tabel)
+// Detail transaksi
 $detailSql = "SELECT t.id_transaksi, p.nama_pelanggan, t.tanggal_masuk, t.total_harga, t.status,
                      COALESCE(SUM(py.jumlah_bayar),0) as total_dibayar,
                      (t.total_harga - COALESCE(SUM(py.jumlah_bayar),0)) as sisa
@@ -90,7 +74,7 @@ $detailResult = $conn->query($detailSql);
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Inter', system-ui, 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
@@ -159,7 +143,7 @@ $detailResult = $conn->query($detailSql);
 
         .main-content {
             margin-left: 260px;
-            padding: 30px 40px;
+            padding: 25px 30px;
             width: calc(100% - 260px);
         }
 
@@ -208,6 +192,10 @@ $detailResult = $conn->query($detailSql);
             background: #0f172a;
             color: white;
             cursor: pointer;
+        }
+
+        .filter-box button:hover {
+            background: #1e293b;
         }
 
         .chart-container {
@@ -333,6 +321,7 @@ $detailResult = $conn->query($detailSql);
             <li><a href="transaksi.php">📦 Data Transaksi</a></li>
             <li><a href="pembayaran.php">💰 Pembayaran</a></li>
             <li class="active"><a href="laporan.php">📊 Laporan</a></li>
+            <li><a href="backup.php">💾 Backup & Restore</a></li>
             <li><a href="logout.php">🚪 Logout</a></li>
         </ul>
     </div>
@@ -356,23 +345,18 @@ $detailResult = $conn->query($detailSql);
             </form>
         </div>
 
-        <!-- Dua Grafik -->
         <div class="chart-container">
             <div class="chart-box">
-                <h3>📈 Pendapatan per Bulan</h3>
-                <canvas id="revenueChart"></canvas>
+                <h3>📈 Pendapatan per Bulan</h3><canvas id="revenueChart"></canvas>
             </div>
             <div class="chart-box">
-                <h3>🥧 Pendapatan per Jenis Laundry</h3>
-                <canvas id="jenisPieChart"></canvas>
+                <h3>🥧 Pendapatan per Jenis Laundry</h3><canvas id="jenisPieChart"></canvas>
             </div>
         </div>
 
-        <!-- Tabel Ringkasan per Bulan per Jenis -->
         <?php if (empty($dataPerBulan)): ?>
             <p>Belum ada data transaksi.</p>
-        <?php else: ?>
-            <?php foreach ($dataPerBulan as $bulan => $data): ?>
+            <?php else: foreach ($dataPerBulan as $bulan => $data): ?>
                 <div class="card-bulan">
                     <div class="card-header">📅 <?= date('F Y', strtotime($bulan . '-01')) ?></div>
                     <div class="card-body">
@@ -382,7 +366,7 @@ $detailResult = $conn->query($detailSql);
                                     <th>Jenis Laundry</th>
                                     <th>Jumlah Transaksi</th>
                                     <th>Total Berat (kg)</th>
-                                    <th>Total Pendapatan</th>
+                                    <th>Total Pendapatan (Rp)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -406,10 +390,9 @@ $detailResult = $conn->query($detailSql);
                         </table>
                     </div>
                 </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
+        <?php endforeach;
+        endif; ?>
 
-        <!-- Tabel Detail Transaksi -->
         <div class="detail-table-wrapper">
             <h3 style="margin-bottom:15px;">📋 Detail Transaksi</h3>
             <?php if ($detailResult && $detailResult->num_rows > 0): ?>
@@ -420,9 +403,9 @@ $detailResult = $conn->query($detailSql);
                             <th>ID Pesanan</th>
                             <th>Pelanggan</th>
                             <th>Tgl Masuk</th>
-                            <th>Total Harga</th>
-                            <th>Dibayar</th>
-                            <th>Sisa</th>
+                            <th>Total Harga (Rp)</th>
+                            <th>Dibayar (Rp)</th>
+                            <th>Sisa (Rp)</th>
                             <th>Status</th>
                         </tr>
                     </thead>
@@ -430,7 +413,7 @@ $detailResult = $conn->query($detailSql);
                         <?php $no = 1;
                         while ($row = $detailResult->fetch_assoc()): $id_pesanan = "PS" . str_pad($row['id_transaksi'], 3, '0', STR_PAD_LEFT); ?>
                             <tr>
-                                <td style="text-align:center;"><?= $no++; ?></td>
+                                <td><?= $no++; ?></td>
                                 <td><?= $id_pesanan ?></td>
                                 <td><?= htmlspecialchars($row['nama_pelanggan']) ?></td>
                                 <td><?= $row['tanggal_masuk'] ?></td>
@@ -442,15 +425,15 @@ $detailResult = $conn->query($detailSql);
                         <?php endwhile; ?>
                     </tbody>
                 </table>
-            <?php else: ?><p>Belum ada transaksi.</p><?php endif; ?>
+            <?php else: ?>
+                <p>Belum ada transaksi.</p>
+            <?php endif; ?>
         </div>
-        <div class="footer">Copyright &copy; 2025 LaundryKu. All rights reserved.</div>
+        <div class="footer">Copyright &copy; 2025 LaundryKu</div>
     </div>
 
     <script>
-        // Grafik pendapatan per bulan (bar chart)
-        const ctx = document.getElementById('revenueChart').getContext('2d');
-        new Chart(ctx, {
+        new Chart(document.getElementById('revenueChart'), {
             type: 'bar',
             data: {
                 labels: <?= json_encode($bulanLabels) ?>,
@@ -458,8 +441,7 @@ $detailResult = $conn->query($detailSql);
                     label: 'Pendapatan (Rp)',
                     data: <?= json_encode($bulanValues) ?>,
                     backgroundColor: '#3b82f6',
-                    borderRadius: 8,
-                    borderSkipped: false
+                    borderRadius: 8
                 }]
             },
             options: {
@@ -477,9 +459,7 @@ $detailResult = $conn->query($detailSql);
             }
         });
 
-        // Grafik pie per jenis laundry
-        const pieCtx = document.getElementById('jenisPieChart').getContext('2d');
-        new Chart(pieCtx, {
+        new Chart(document.getElementById('jenisPieChart'), {
             type: 'pie',
             data: {
                 labels: <?= json_encode($jenisLabels) ?>,

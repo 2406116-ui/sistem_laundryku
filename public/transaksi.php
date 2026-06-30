@@ -22,7 +22,6 @@ $result = $conn->query($sql);
     <meta charset="UTF-8">
     <title>Data Transaksi - LaundryKu</title>
     <style>
-        /* salin style dari file pelanggan.php di atas */
         * {
             margin: 0;
             padding: 0;
@@ -124,17 +123,17 @@ $result = $conn->query($sql);
         .btn {
             background: #0f172a;
             border: none;
-            padding: 8px 20px;
+            padding: 6px 14px;
             border-radius: 40px;
             color: white;
             font-weight: 600;
-            cursor: pointer;
             text-decoration: none;
             display: inline-block;
-            font-size: 13px;
+            font-size: 12px;
+            margin: 2px;
         }
 
-        .btn-update {
+        .btn-edit {
             background: #e2e8f0;
             color: #1e293b;
         }
@@ -231,18 +230,19 @@ $result = $conn->query($sql);
                             <th>Jenis</th>
                             <th>Tgl Masuk</th>
                             <th>Berat (kg)</th>
-                            <th>Harga/Kg</th>
-                            <th>Total</th>
+                            <th>Harga/Kg (Rp)</th>
+                            <th>Total (Rp)</th>
                             <th>Status</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
-                    <tbody><?php $no = 1;
-                            while ($row = $result->fetch_assoc()):
-                                $id_pesanan = "PS" . str_pad($row['id_transaksi'], 3, '0', STR_PAD_LEFT);
-                            ?>
+                    <tbody>
+                        <?php $no = 1;
+                        while ($row = $result->fetch_assoc()):
+                            $id_pesanan = "PS" . str_pad($row['id_transaksi'], 3, '0', STR_PAD_LEFT);
+                        ?>
                             <tr>
-                                <td><?= $no++; ?></td>
+                                <td style="text-align:center;"><?= $no++; ?></td>
                                 <td><?= $id_pesanan ?></td>
                                 <td><?= htmlspecialchars($row['nama_pelanggan']) ?></td>
                                 <td><?= htmlspecialchars($row['jenis'] ?? 'Baju') ?></td>
@@ -252,7 +252,7 @@ $result = $conn->query($sql);
                                 <td>Rp <?= number_format($row['total_harga'], 0, ',', '.') ?></td>
                                 <td><?= ucfirst($row['status']) ?></td>
                                 <td>
-                                    <a href="transaksi_update_form.php?id=<?= $row['id_transaksi'] ?>" class="btn btn-update">Update</a>
+                                    <a href="transaksi_update_form.php?id=<?= $row['id_transaksi'] ?>" class="btn btn-edit">Update</a>
                                     <?php if ($row['status'] == 'proses'): ?>
                                         <a href="?ubah_status=selesai&id=<?= $row['id_transaksi'] ?>" class="btn">Selesai</a>
                                     <?php elseif ($row['status'] == 'selesai'): ?>
@@ -265,7 +265,9 @@ $result = $conn->query($sql);
                         <?php endwhile; ?>
                     </tbody>
                 </table>
-            <?php else: ?><p>Belum ada transaksi.</p><?php endif; ?>
+            <?php else: ?>
+                <p>Belum ada transaksi.</p>
+            <?php endif; ?>
         </div>
         <div class="footer">Copyright &copy; 2025 LaundryKu</div>
     </div>

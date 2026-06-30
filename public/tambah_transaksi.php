@@ -5,6 +5,7 @@ if (!isset($_SESSION['login'])) {
     exit();
 }
 require_once '../config/database.php';
+
 $pelanggan = $conn->query("SELECT * FROM pelanggan");
 $hargaPerJenis = [
     'Baju' => 8000,
@@ -12,6 +13,7 @@ $hargaPerJenis = [
     'Sepatu' => 15000,
     'Karpet' => 20000
 ];
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $id_pelanggan = (int)$_POST['id_pelanggan'];
     $jenis = $_POST['jenis'];
@@ -20,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $berat = (float)$_POST['berat_kg'];
     $harga = $hargaPerJenis[$jenis];
     $status = $_POST['status'];
+
     $sql = "INSERT INTO transaksi (id_pelanggan, jenis, tanggal_masuk, tanggal_selesai, berat_kg, harga_perkg, status)
             VALUES ($id_pelanggan, '$jenis', '$tgl_masuk', '$tgl_selesai', $berat, $harga, '$status')";
     if ($conn->query($sql)) {
@@ -41,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Inter', system-ui, 'Segoe UI', sans-serif;
+            font-family: 'Inter', sans-serif;
         }
 
         body {
@@ -64,7 +67,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             font-size: 22px;
             font-weight: 600;
             border-bottom: 1px solid #334155;
-            margin-bottom: 20px;
         }
 
         .sidebar .logo span {
@@ -91,7 +93,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             text-decoration: none;
             border-radius: 12px;
             transition: 0.2s;
-            font-weight: 500;
         }
 
         .sidebar ul li a:hover {
@@ -110,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         .main-content {
             margin-left: 260px;
-            padding: 30px 40px;
+            padding: 25px;
             width: calc(100% - 260px);
         }
 
@@ -139,8 +140,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             background: white;
             padding: 25px;
             border-radius: 20px;
-            border: 1px solid #e2e8f0;
             max-width: 500px;
+            border: 1px solid #e2e8f0;
         }
 
         input,
@@ -169,6 +170,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             color: white;
             font-weight: 600;
             cursor: pointer;
+        }
+
+        button:hover {
+            background: #1e293b;
         }
 
         .footer {
@@ -207,8 +212,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <div class="logo"><span>🧺 LaundryKu</span></div>
         <ul>
             <li><a href="dashboard.php">🏠 Beranda</a></li>
-            <li><a href="pelanggan.php">👥 Data Pelanggan</a></li>
-            <li class="active"><a href="transaksi.php">📦 Data Transaksi</a></li>
+            <li><a href="pelanggan.php">👥 Pelanggan</a></li>
+            <li class="active"><a href="transaksi.php">📦 Transaksi</a></li>
             <li><a href="pembayaran.php">💰 Pembayaran</a></li>
             <li><a href="laporan.php">📊 Laporan</a></li>
             <li><a href="logout.php">🚪 Logout</a></li>
@@ -219,6 +224,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <h2>Tambah Transaksi</h2>
             <div class="user-info">Halo, <?= htmlspecialchars($_SESSION['username']) ?></div>
         </div>
+        <?php if (isset($error)): ?>
+            <div style="background:#fee2e2; color:#b91c1c; padding:12px; border-radius:14px; margin-bottom:20px;"><?= $error ?></div>
+        <?php endif; ?>
         <form method="post">
             <select name="id_pelanggan" required>
                 <option value="">Pilih Pelanggan</option>
@@ -226,26 +234,56 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <option value="<?= $p['id_pelanggan'] ?>"><?= htmlspecialchars($p['nama_pelanggan']) ?></option>
                 <?php endwhile; ?>
             </select>
+
             <select name="jenis" required>
                 <option value="Baju">👕 Baju (Rp 8.000/kg)</option>
                 <option value="Selimut">🛏️ Selimut (Rp 12.000/kg)</option>
                 <option value="Sepatu">👟 Sepatu (Rp 15.000/kg)</option>
                 <option value="Karpet">🧶 Karpet (Rp 20.000/kg)</option>
             </select>
+
+            <!-- PERBAIKAN: Tanggal Masuk tidak bisa pilih masa depan (max=hari ini) -->
             <label>Tanggal Masuk</label>
-            <input type="date" name="tanggal_masuk" required>
+            <input type="date" name="tanggal_masuk" id="tanggal_masuk" max="<?= date('Y-m-d') ?>" required>
+
+            <!-- PERBAIKAN: Tanggal Selesai tidak boleh kurang dari tanggal masuk, diatur via JavaScript -->
             <label>Tanggal Selesai (opsional)</label>
-            <input type="date" name="tanggal_selesai">
+            <input type="date" name="tanggal_selesai" id="tanggal_selesai">
+
             <input type="number" step="0.01" name="berat_kg" placeholder="Berat (kg)" required>
             <select name="status">
                 <option value="proses">Proses</option>
                 <option value="selesai">Selesai</option>
                 <option value="diambil">Diambil</option>
             </select>
+
             <button type="submit">Simpan Transaksi</button>
         </form>
         <div class="footer">Copyright &copy; 2025 LaundryKu</div>
     </div>
+
+    <!-- JavaScript untuk sinkronisasi tanggal selesai -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tglMasuk = document.getElementById('tanggal_masuk');
+            const tglSelesai = document.getElementById('tanggal_selesai');
+
+            // Set minimum tanggal selesai = tanggal masuk saat halaman dimuat (jika tanggal masuk sudah terisi)
+            function updateMinSelesai() {
+                if (tglMasuk.value) {
+                    tglSelesai.min = tglMasuk.value;
+                    // Jika tanggal selesai lebih kecil dari tanggal masuk, reset ke tanggal masuk
+                    if (tglSelesai.value && tglSelesai.value < tglMasuk.value) {
+                        tglSelesai.value = tglMasuk.value;
+                    }
+                }
+            }
+
+            tglMasuk.addEventListener('change', updateMinSelesai);
+            // Panggil sekali saat load untuk inisialisasi
+            updateMinSelesai();
+        });
+    </script>
 </body>
 
 </html>

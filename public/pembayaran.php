@@ -65,6 +65,7 @@ $result = $conn->query($sql);
             font-size: 22px;
             font-weight: 600;
             border-bottom: 1px solid #334155;
+            margin-bottom: 20px;
         }
 
         .sidebar .logo span {
@@ -183,7 +184,6 @@ $result = $conn->query($sql);
             padding: 12px;
             text-align: left;
             font-weight: 600;
-            border-bottom: 2px solid #e2e8f0;
         }
 
         td {
@@ -199,6 +199,26 @@ $result = $conn->query($sql);
             color: #94a3b8;
             border-top: 1px solid #e2e8f0;
             padding-top: 20px;
+        }
+
+        @media (max-width:768px) {
+            .sidebar {
+                width: 80px;
+            }
+
+            .sidebar .logo span {
+                display: none;
+            }
+
+            .sidebar ul li a {
+                text-align: center;
+                padding: 12px 0;
+            }
+
+            .main-content {
+                margin-left: 80px;
+                width: calc(100% - 80px);
+            }
         }
     </style>
 </head>
@@ -224,7 +244,7 @@ $result = $conn->query($sql);
             <select name="id_transaksi" required>
                 <option value="">Pilih Transaksi (Belum Lunas)</option>
                 <?php while ($t = $transaksiList->fetch_assoc()): $sisa = $t['total_harga'] - $t['sudah_dibayar']; ?>
-                    <option value="<?= $t['id_transaksi'] ?>"><?= htmlspecialchars($t['nama_pelanggan']) ?> - Total: Rp <?= number_format($t['total_harga'], 0, ',', '.') ?> (Sisa: Rp <?= number_format($sisa, 0, ',', '.') ?>)</option>
+                    <option value="<?= $t['id_transaksi'] ?>"><?= htmlspecialchars($t['nama_pelanggan']) ?> - Total: Rp <?= number_format($t['total_harga'], 2, ',', '.') ?> (Sisa: Rp <?= number_format($sisa, 2, ',', '.') ?>)</option>
                 <?php endwhile; ?>
             </select>
             <input type="date" name="tanggal_bayar" required>
@@ -236,7 +256,6 @@ $result = $conn->query($sql);
             </select>
             <button type="submit" name="tambah">Simpan Pembayaran</button>
         </form>
-
         <div class="table-wrapper">
             <h3>📋 Riwayat Pembayaran</h3>
             <?php if ($result && $result->num_rows > 0): ?>
@@ -247,7 +266,7 @@ $result = $conn->query($sql);
                             <th>ID Pesanan</th>
                             <th>Pelanggan</th>
                             <th>Tanggal Bayar</th>
-                            <th>Jumlah</th>
+                            <th>Jumlah (Rp)</th>
                             <th>Metode</th>
                         </tr>
                     </thead>
@@ -261,7 +280,7 @@ $result = $conn->query($sql);
                                 <td><?= $id_pesanan ?></td>
                                 <td><?= htmlspecialchars($row['nama_pelanggan']) ?></td>
                                 <td><?= $row['tanggal_bayar'] ?></td>
-                                <td>Rp <?= number_format($row['jumlah_bayar'], 0, ',', '.') ?></td>
+                                <td>Rp <?= number_format($row['jumlah_bayar'], 2, ',', '.') ?></td>
                                 <td><?= $row['metode'] ?></td>
                             </tr>
                         <?php endwhile; ?>

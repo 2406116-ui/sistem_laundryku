@@ -24,7 +24,7 @@ if (isset($_GET['hapus'])) {
         header("Location: pelanggan.php");
     }
 }
-$data = $conn->query("SELECT * FROM pelanggan ORDER BY id_pelanggan DESC");
+$data = $conn->query("SELECT * FROM pelanggan ORDER BY id_pelanggan DESC");//qury select(read)
 ?>
 <!DOCTYPE html>
 <html lang="id">
